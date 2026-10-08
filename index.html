@@ -1,518 +1,62 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Ekrem Arda Gümüş</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link
-            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,575;1,575&family=Inter:wght@400;600;700&display=swap"
-            rel="stylesheet"
-        />
-        <style>
-            body {
-                background-color: #000000;
-                color: #ffffff;
-                font-family: "JetBrains Mono", sans-serif; /* Default font */
-                overflow-x: hidden;
-                margin: 0;
-            }
-            #backgroundCanvas {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 0;
-                filter: blur(150px);
-                opacity: 1;
-            }
-
-            #stickyHeaderGlass {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 0;
-                background: rgba(0, 0, 0, 0.5);
-                backdrop-filter: blur(6px);
-                -webkit-backdrop-filter: blur(6px);
-                z-index: 9;
-                opacity: 0;
-                transition:
-                    opacity 0.4s ease-in-out,
-                    height 0.4s ease-in-out;
-                pointer-events: none;
-            }
-            #stickyHeaderGlass.visible {
-                opacity: 1;
-            }
-
-            #textContainer {
-                position: fixed;
-                inset: 0;
-                z-index: 10;
-                display: flex;
-                align-items: flex-start;
-                justify-content: center;
-                pointer-events: none;
-            }
-            #mainText {
-                font-family: "Inter", sans-serif;
-                font-weight: 600;
-                text-align: center;
-                color: white;
-                white-space: nowrap;
-            }
-
-            #aboutSection {
-                padding-top: 100vh;
-                opacity: 0;
-                transform: translateY(50px);
-                transition:
-                    opacity 0.8s ease-out,
-                    transform 0.8s ease-out;
-                min-height: 100vh;
-                pointer-events: auto;
-                margin-top: 50px;
-            }
-            #aboutSection.visible {
-                opacity: 1;
-                transform: translateY(0);
-            }
-
-            /* Timeline Styles */
-            .timeline {
-                position: relative;
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 40px 0;
-            }
-            .timeline::after {
-                content: "";
-                position: absolute;
-                width: 3px;
-                background-color: #4a5568;
-                top: 0;
-                bottom: 0;
-                left: 50%;
-                margin-left: -1.5px;
-            }
-            .timeline-item {
-                padding: 10px 40px;
-                position: relative;
-                background-color: inherit;
-                width: 50%;
-            }
-            .timeline-item::after {
-                content: "";
-                position: absolute;
-                width: 20px;
-                height: 20px;
-                right: -10px;
-                background-color: rgba(255, 255, 255, 1);
-                border: 4px solid #2b6cb0;
-                top: 20px;
-                border-radius: 50%;
-                z-index: 1;
-            }
-            .timeline-item.left {
-                left: 0;
-            }
-            .timeline-item.right {
-                left: 50%;
-            }
-            .timeline-item.left::before {
-                content: " ";
-                height: 0;
-                position: absolute;
-                top: 25px;
-                width: 0;
-                z-index: 1;
-                right: 30px;
-                border: medium solid white;
-                border-width: 10px 0 10px 10px;
-                border-color: transparent transparent transparent
-                    rgba(255, 255, 255, 0.1);
-            }
-            .timeline-item.right::before {
-                content: " ";
-                height: 0;
-                position: absolute;
-                top: 25px;
-                width: 0;
-                z-index: 1;
-                left: 30px;
-                border: medium solid white;
-                border-width: 10px 10px 10px 0;
-                border-color: transparent rgba(255, 255, 255, 0.1) transparent
-                    transparent;
-            }
-            .timeline-item.right::after {
-                left: -10px;
-            }
-            .timeline-content {
-                padding: 20px 30px;
-                background: rgba(255, 255, 255, 0.1);
-                backdrop-filter: blur(6px);
-                -webkit-backdrop-filter: blur(6px);
-                position: relative;
-                border-radius: 15px;
-            }
-            .timeline-content h3 {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #63b3ed;
-            }
-            .timeline-content p {
-                font-size: 1rem;
-                color: #a0aec0;
-            }
-
-            .code-block-placeholder {
-                border: 2px dashed #4a5568;
-                padding: 2rem;
-                margin: 1rem 0;
-                border-radius: 8px;
-                text-align: center;
-                color: #a0aec0;
-                /* If you want content within the stretched blocks to also distribute vertically: */
-                /* display: flex; flex-direction: column; justify-content: space-between; */
-            }
-            .code-block-placeholder .icon {
-                font-size: 3rem;
-                margin-bottom: 0.5rem;
-            }
-        </style>
-    </head>
-    <body class="bg-black text-white">
-        <div id="stickyHeaderGlass"></div>
-
-        <canvas id="backgroundCanvas"></canvas>
-        <div id="textContainer">
-            <h1 id="mainText">Ekrem Arda Gümüş</h1>
-        </div>
-
-        <div id="aboutSection" class="container mx-auto px-4">
-            <h2 class="text-5xl font-bold text-center mb-12 mt-16">About Me</h2>
-            <!-- MODIFIED: Removed 'items-start' to make blocks same height -->
-            <div class="grid md:grid-cols-2 gap-12 mb-16">
-                <div class="code-block-placeholder">
-                    <div class="icon">🖳</div>
-                    <p class="text-xl font-semibold">Software Projects</p>
-                    <p class="mt-2 text-sm">
-                        Computer Science is my life. I love anything about
-                        technology and especially coding. I found that I feel
-                        best while making Mobile Applications. That's my hobby
-                        right now.
-                    </p>
-                </div>
-                <div class="code-block-placeholder">
-                    <div class="icon">🖉</div>
-                    <p class="text-xl font-semibold">Design & UI/UX</p>
-                    <p class="mt-2 text-sm">
-                        Exploring user interface design principles and creating
-                        intuitive user experiences. Ut enim ad minim veniam,
-                        quis nostrud exercitation ullamco laboris nisi ut
-                        aliquip ex ea commodo consequat.
-                    </p>
-                </div>
-            </div>
-            <div class="timeline">
-                <div class="timeline-item left">
-                    <div class="timeline-content">
-                        <h3>2009</h3>
-                        <p>Born. The journey begins!</p>
-                    </div>
-                </div>
-                <div class="timeline-item right">
-                    <div class="timeline-content">
-                        <h3>2014</h3>
-                        <p>Learnt reading and writing. Unlocked new worlds.</p>
-                    </div>
-                </div>
-                <div class="timeline-item left">
-                    <div class="timeline-content">
-                        <h3>2023</h3>
-                        <p>LGS Exam. A significant academic milestone.</p>
-                    </div>
-                </div>
-                <div class="timeline-item right">
-                    <div class="timeline-content">
-                        <h3>Future</h3>
-                        <p>
-                            Exploring new technologies and building cool stuff!
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer Section with improved readability -->
-        <footer
-            id="contactSection"
-            class="px-4 text-center py-12 mt-20 border-t border-gray-800 bg-[rgba(0,0,0,0.25)] backdrop-blur-[20px] rounded-lg"
-        >
-            <h3 class="text-3xl font-semibold mb-8 text-gray-200">
-                Get in Touch
-            </h3>
-
-            <div
-                class="flex justify-center items-center space-x-6 sm:space-x-8 text-lg"
-            >
-                <a
-                    href="mailto:ekremardagumus@gmail.com"
-                    title="Email Me"
-                    class="text-gray-400 hover:text-blue-400 transition-colors duration-300 transform hover:scale-110"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-9 w-9 sm:h-10 sm:w-10 inline-block"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
-                        />
-                    </svg>
-                    <span class="sr-only">Email</span>
-                </a>
-                <a
-                    href="https://github.com/eagms"
-                    title="My GitHub"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-gray-400 hover:text-blue-400 transition-colors duration-300 transform hover:scale-110"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-9 w-9 sm:h-10 sm:w-10 inline-block"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.085 8.199-11.386 0-6.627-5.373-12-12-12z"
-                        />
-                    </svg>
-                    <span class="sr-only">GitHub</span>
-                </a>
-            </div>
-
-            <p class="mt-10 text-sm text-gray-500">
-                © <span id="currentYear"></span> Ekrem Arda Gümüş. All rights
-                reserved.
-            </p>
-        </footer>
-
-        <script>
-            const canvas = document.getElementById("backgroundCanvas");
-            const ctx = canvas.getContext("2d");
-            const stickyHeaderGlass =
-                document.getElementById("stickyHeaderGlass");
-            const textContainer = document.getElementById("textContainer");
-            const mainText = document.getElementById("mainText");
-            const aboutSection = document.getElementById("aboutSection");
-
-            let circles = [];
-            const numCircles = 25;
-
-            let initialActualFontSizePx;
-            let targetFinalActualFontSizePx;
-            let initialPaddingTopPx;
-            let finalPaddingTopPx;
-
-            const scrollTransitionRange = 700;
-            let aboutSectionVisible = false;
-
-            class Circle {
-                constructor(x, y, radius, dx, dy, color) {
-                    this.x = x;
-                    this.y = y;
-                    this.radius = radius;
-                    this.dx = dx;
-                    this.dy = dy;
-                    this.color = color;
-                }
-                draw() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                    ctx.closePath();
-                }
-                update() {
-                    if (
-                        this.x + this.radius > canvas.width ||
-                        this.x - this.radius < 0
-                    )
-                        this.dx = -this.dx;
-                    if (
-                        this.y + this.radius > canvas.height ||
-                        this.y - this.radius < 0
-                    )
-                        this.dy = -this.dy;
-                    this.x += this.dx;
-                    this.y += this.dy;
-                    this.draw();
-                }
-            }
-
-            function initCircles() {
-                circles = [];
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                for (let i = 0; i < numCircles; i++) {
-                    const radius =
-                        ((Math.random() * 50 + 140) / 1920) * canvas.width;
-                    const x =
-                        Math.random() * (canvas.width - radius * 2) + radius;
-                    const y =
-                        Math.random() * (canvas.height - radius * 2) + radius;
-                    const dx = (Math.random() - 0.5) * 3 + 3;
-                    const dy = (Math.random() - 0.5) * 3 + 3;
-                    const alpha = Math.random() * 0.2 + 0.6;
-                    const red = Math.random() * 100;
-                    const green = Math.random() * 50 + 35;
-                    const color = `rgba(${red}, ${green}, 110, ${alpha})`;
-                    circles.push(new Circle(x, y, radius, dx, dy, color));
-                }
-            }
-
-            function animateCircles() {
-                requestAnimationFrame(animateCircles);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                circles.forEach((circle) => circle.update());
-            }
-
-            function getTargetFinalFontSizePx() {
-                const rootFontSize = parseFloat(
-                    getComputedStyle(document.documentElement).fontSize,
-                );
-                let targetRem;
-                if (window.innerWidth >= 1024) targetRem = 3;
-                else if (window.innerWidth >= 768) targetRem = 2.25;
-                else if (window.innerWidth >= 640) targetRem = 1.875;
-                else targetRem = 1.5;
-                return targetRem * rootFontSize;
-            }
-
-            function calculateMaxInitialFontSize() {
-                let testFontSize = 200;
-                mainText.style.fontSize = testFontSize + "px";
-                while (
-                    mainText.scrollWidth > window.innerWidth * 0.9 &&
-                    testFontSize > 10
-                ) {
-                    testFontSize -= 1;
-                    mainText.style.fontSize = testFontSize + "px";
-                }
-                return testFontSize;
-            }
-
-            function updateTextAnimationParameters() {
-                initialActualFontSizePx = calculateMaxInitialFontSize();
-                mainText.style.fontSize = initialActualFontSizePx + "px";
-                targetFinalActualFontSizePx = getTargetFinalFontSizePx();
-                const initialMainTextHeight = mainText.offsetHeight;
-                const rootFontSize = parseFloat(
-                    getComputedStyle(document.documentElement).fontSize,
-                );
-                finalPaddingTopPx = 2 * rootFontSize;
-                initialPaddingTopPx =
-                    window.innerHeight / 2 - initialMainTextHeight / 2;
-                initialPaddingTopPx = Math.max(0, initialPaddingTopPx);
-            }
-
-            function handleScrollAndResize() {
-                const scrollY = window.scrollY;
-                const scrollFraction = Math.min(
-                    1,
-                    scrollY / scrollTransitionRange,
-                );
-
-                if (
-                    initialActualFontSizePx != null &&
-                    targetFinalActualFontSizePx != null
-                ) {
-                    let currentPxSize =
-                        initialActualFontSizePx -
-                        (initialActualFontSizePx -
-                            targetFinalActualFontSizePx) *
-                            scrollFraction;
-                    currentPxSize = Math.max(
-                        targetFinalActualFontSizePx,
-                        Math.min(initialActualFontSizePx, currentPxSize),
-                    );
-                    mainText.style.fontSize = currentPxSize + "px";
-                }
-
-                if (initialPaddingTopPx != null && finalPaddingTopPx != null) {
-                    let currentPaddingTop =
-                        initialPaddingTopPx -
-                        (initialPaddingTopPx - finalPaddingTopPx) *
-                            scrollFraction;
-                    currentPaddingTop = Math.max(
-                        finalPaddingTopPx,
-                        Math.min(initialPaddingTopPx, currentPaddingTop),
-                    );
-                    textContainer.style.paddingTop = currentPaddingTop + "px";
-                }
-
-                const isStuck = scrollFraction >= 1;
-
-                if (isStuck) {
-                    if (!stickyHeaderGlass.classList.contains("visible")) {
-                        const finalMainTextHeight = mainText.offsetHeight;
-                        const rootFontSize = parseFloat(
-                            getComputedStyle(document.documentElement).fontSize,
-                        );
-                        const headerBottomPadding = 1.5 * rootFontSize;
-                        const glassHeight =
-                            finalPaddingTopPx +
-                            finalMainTextHeight +
-                            headerBottomPadding;
-
-                        stickyHeaderGlass.style.height = glassHeight + "px";
-                        stickyHeaderGlass.classList.add("visible");
-                    }
-                } else {
-                    if (stickyHeaderGlass.classList.contains("visible")) {
-                        stickyHeaderGlass.classList.remove("visible");
-                    }
-                }
-
-                if (
-                    scrollY > scrollTransitionRange + 50 &&
-                    !aboutSectionVisible
-                ) {
-                    aboutSection.classList.add("visible");
-                    aboutSectionVisible = true;
-                } else if (
-                    scrollY <= scrollTransitionRange + 50 &&
-                    aboutSectionVisible
-                ) {
-                    // aboutSection.classList.remove('visible'); aboutSectionVisible = false;
-                }
-            }
-
-            window.addEventListener("scroll", handleScrollAndResize);
-            window.addEventListener("resize", () => {
-                initCircles();
-                updateTextAnimationParameters();
-                handleScrollAndResize();
-            });
-
-            initCircles();
-            updateTextAnimationParameters();
-            animateCircles();
-            handleScrollAndResize();
-
-            if (document.getElementById("currentYear")) {
-                document.getElementById("currentYear").textContent =
-                    new Date().getFullYear();
-            }
-        </script>
-    </body>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ekrem Arda Gümüş</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #0a0a14;
+  }
+  .bg {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    filter: blur(80px);
+  }
+  .blob {
+    position: absolute;
+    width: 50vmax;
+    height: 50vmax;
+    border-radius: 50%;
+    opacity: .8;
+    animation: float 18s ease-in-out infinite alternate;
+  }
+  .b1 { background: #ff3d81; top: -10%; left: -10%; }
+  .b2 { background: #3d7bff; bottom: -15%; right: -10%; animation-duration: 22s; animation-delay: -6s; }
+  .b3 { background: #8a3dff; top: 30%; left: 35%; animation-duration: 26s; animation-delay: -12s; }
+  .b4 { background: #3dffc8; top: -15%; right: 5%; width: 35vmax; height: 35vmax; animation-duration: 20s; animation-delay: -3s; }
+  @keyframes float {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(25vw, 15vh) scale(1.2); }
+    100% { transform: translate(-15vw, 25vh) scale(.9); }
+  }
+  h1 {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 5vw;
+    color: #fff;
+    font: 600 clamp(2rem, 7vw, 5rem)/1.1 system-ui, -apple-system, sans-serif;
+    letter-spacing: -.02em;
+    text-transform: lowercase;
+  }
+</style>
+</head>
+<body>
+  <div class="bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="blob b4"></div>
+  </div>
+  <h1>ekrem arda gümüş</h1>
+</body>
 </html>
